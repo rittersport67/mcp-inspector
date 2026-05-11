@@ -1,14 +1,44 @@
 {
   "name": "mcp-inspector",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.mjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "start": "node server.mjs",
+    "electron:dev": "npm run build && electron .",
+    "electron:build": "npm run build && electron-builder",
     "lint": "eslint .",
     "preview": "vite preview"
+  },
+  "build": {
+    "appId": "com.mcp-inspector.app",
+    "productName": "MCP Inspector",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "electron/main.mjs",
+      "server-core.mjs"
+    ],
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }],
+      "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "linux": {
+      "target": [{ "target": "AppImage", "arch": ["x64"] }],
+      "category": "Development"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
@@ -26,6 +56,8 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "electron": "^41.5.1",
+    "electron-builder": "^26.8.1",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
