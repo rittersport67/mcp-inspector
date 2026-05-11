@@ -109,7 +109,7 @@ export function TextBlock({ text }: { text: string }) {
 }
 
 export function ResultView({ result }: Props) {
-  const blocks = result.content as Array<{ type: string; text?: string; data?: string; mimeType?: string }>;
+  const blocks = (result.content ?? []) as Array<{ type: string; text?: string; data?: string; mimeType?: string }>;
 
   return (
     <div className="border border-border rounded-lg bg-background overflow-hidden">
