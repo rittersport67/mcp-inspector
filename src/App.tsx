@@ -4,6 +4,7 @@ import { ConnectionPanel } from "@/components/ConnectionPanel";
 import { ResourcesPanel } from "@/components/ResourcesPanel";
 import { ToolsPanel } from "@/components/ToolsPanel";
 import { PromptsPanel } from "@/components/PromptsPanel";
+import { LogsPanel } from "@/components/LogsPanel";
 import { useMcpClient } from "@/hooks/useMcpClient";
 
 type Tab = "resources" | "tools" | "prompts";
@@ -63,16 +64,19 @@ function App() {
             ))}
           </nav>
 
-          <div className="flex-1 min-h-0 overflow-hidden">
-            {tab === "resources" && (
-              <ResourcesPanel resources={mcp.resources} onRead={mcp.readResource} />
-            )}
-            {tab === "tools" && (
-              <ToolsPanel tools={mcp.tools} onCall={mcp.callTool} />
-            )}
-            {tab === "prompts" && (
-              <PromptsPanel prompts={mcp.prompts} onGet={mcp.getPrompt} />
-            )}
+          <div className="flex-1 min-h-0 overflow-hidden flex">
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {tab === "resources" && (
+                <ResourcesPanel resources={mcp.resources} onRead={mcp.readResource} />
+              )}
+              {tab === "tools" && (
+                <ToolsPanel tools={mcp.tools} onCall={mcp.callTool} />
+              )}
+              {tab === "prompts" && (
+                <PromptsPanel prompts={mcp.prompts} onGet={mcp.getPrompt} />
+              )}
+            </div>
+            <LogsPanel logs={mcp.logs} onClear={mcp.clearLogs} />
           </div>
         </div>
       ) : (

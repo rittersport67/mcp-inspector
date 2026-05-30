@@ -39,6 +39,11 @@ function mcpProxyPlugin(): Plugin {
           if (val) upstreamHeaders[key] = val as string
         }
 
+        // GET requests to MCP endpoints are always SSE — force the required Accept header
+        if (req.method === 'GET') {
+          upstreamHeaders['accept'] = 'text/event-stream'
+        }
+
         const chunks: Buffer[] = []
         req.on('data', (chunk: Buffer) => chunks.push(chunk))
         req.on('end', () => {

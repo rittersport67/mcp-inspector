@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { LoggingMessageNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
 import type {
   Tool,
   Resource,
@@ -18,6 +19,14 @@ export interface McpState {
   tools: Tool[];
   resources: Resource[];
   prompts: Prompt[];
+}
+
+export interface LogEntry {
+  id: number;
+  timestamp: Date;
+  level: string;
+  logger?: string;
+  data: unknown;
 }
 
 function createProxiedFetch(targetUrl: string, authToken?: string): typeof globalThis.fetch {
@@ -46,6 +55,8 @@ export function useMcpClient() {
     resources: [],
     prompts: [],
   });
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const logIdRef = useRef(0);
 
   const clientRef = useRef<Client | null>(null);
 
@@ -55,6 +66,7 @@ export function useMcpClient() {
     }
 
     setState((s) => ({ ...s, status: "connecting", error: null }));
+    setLogs([]);
 
     try {
       const transport = new StreamableHTTPClientTransport(new URL(url), {
@@ -66,8 +78,24 @@ export function useMcpClient() {
         { capabilities: {} }
       );
 
+      client.setNotificationHandler(LoggingMessageNotificationSchema, (notification) => {
+        setLogs((prev) => [
+          ...prev,
+          {
+            id: logIdRef.current++,
+            timestamp: new Date(),
+            level: notification.params.level,
+            logger: notification.params.logger,
+            data: notification.params.data,
+          },
+        ]);
+      });
+
       await client.connect(transport);
       clientRef.current = client;
+
+      // Request debug-level logs from the server (silently skip if not supported)
+      client.setLoggingLevel("debug").catch(() => {});
 
       const [toolsRes, resourcesRes, promptsRes] = await Promise.allSettled([
         client.listTools(),
@@ -100,7 +128,10 @@ export function useMcpClient() {
       clientRef.current = null;
     }
     setState({ status: "disconnected", error: null, tools: [], resources: [], prompts: [] });
+    setLogs([]);
   }, []);
+
+  const clearLogs = useCallback(() => setLogs([]), []);
 
   const callTool = useCallback(async (name: string, args: Record<string, unknown>): Promise<CallToolResult> => {
     if (!clientRef.current) throw new Error("Not connected");
@@ -119,5 +150,5 @@ export function useMcpClient() {
     return result.messages;
   }, []);
 
-  return { ...state, connect, disconnect, callTool, readResource, getPrompt };
+  return { ...state, logs, clearLogs, connect, disconnect, callTool, readResource, getPrompt };
 }
